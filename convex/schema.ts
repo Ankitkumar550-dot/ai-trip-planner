@@ -7,6 +7,6 @@ export default defineSchema({
         imageUrl:v.string(),
         email:v.string(),
         subscription: v.string(),
-        
+
     })
 })
