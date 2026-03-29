@@ -37,6 +37,7 @@ function Header() {
             </Link>
           ))}
           </div>
+          {/* Get started button */}
 
           {!user ?<SignInButton mode="modal">
             <Button>Get Started</Button>
