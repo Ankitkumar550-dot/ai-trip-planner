@@ -10,7 +10,7 @@ function ChatBox() {
 
     }
   return (
-    <div>
+    <div className='h-[85vh] flex flex-col'>
         {/*Display Messages */}
         <section className='flex-1 overflow-y-auto p-4'>
             <div className='flex justify-end mt-2'>
