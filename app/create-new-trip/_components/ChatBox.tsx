@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
-import { Send } from "lucide-react";
+import { Loader, Send } from "lucide-react";
 import React, { useState } from "react";
 
 type Message = {
@@ -14,10 +14,11 @@ type Message = {
 function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState<string>("");
-
+  const [loading,setLoading]=useState(false);
   const onSend = async () => {
     if (!userInput.trim()) return;
-
+    
+    setLoading(true);
     const newMsg: Message = {
       role: "user",
       content: userInput,
@@ -38,11 +39,12 @@ function ChatBox() {
         ...prev,
         {
           role: "assistant", // ✅ FIXED (not 'assistance')
-         content: result?.data?.data?.resp || "No response"
+         content: result?.data?.resp || "No response"
         },
       ]);
 
       console.log(result.data);
+      setLoading(false);
     } catch (error: any) {
       console.error("❌ FRONTEND ERROR:", error);
 
@@ -88,7 +90,7 @@ function ChatBox() {
           <div className="w-full md:w-3/4 backdrop-blur-xl bg-white/70 dark:bg-neutral-800/60 border border-white/30 shadow-2xl rounded-3xl p-4">
             
             <Textarea
-              placeholder="Create a 5-day trip to Paris from India..."
+              placeholder="Start Typing Here...."
               className="w-full h-24 bg-transparent focus:outline-none resize-none"
               onChange={(e) => setUserInput(e.target.value)}
               value={userInput}
