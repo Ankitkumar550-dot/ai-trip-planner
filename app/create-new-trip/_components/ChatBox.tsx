@@ -5,20 +5,27 @@ import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import { Loader, Send } from "lucide-react";
 import React, { useState } from "react";
+import GroupSizeUi from "./GroupSizeUi";
+import BudgetUi from "./BudgetUi";
+import SelectDaysUi from "./SelectDaysUi";
+import FinalUi from "./FinalUi";
 
 type Message = {
   role: string;
   content: string;
+  ui?: string;
 };
 
 function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState<string>("");
-  const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
+
   const onSend = async () => {
     if (!userInput.trim()) return;
-    
+
     setLoading(true);
+
     const newMsg: Message = {
       role: "user",
       content: userInput,
@@ -26,7 +33,6 @@ function ChatBox() {
 
     const updatedMessages = [...messages, newMsg];
 
-    // ✅ update UI immediately
     setMessages(updatedMessages);
     setUserInput("");
 
@@ -35,12 +41,13 @@ function ChatBox() {
         messages: updatedMessages,
       });
 
-      setMessages((prev) => [
+      setMessages((prev: Message[]) => [
         ...prev,
         {
-          role: "assistant", // ✅ FIXED (not 'assistance')
-         content: result?.data?.resp || "No response"
-        },
+          role: "assistant",
+          content: result?.data?.resp || "No response", // ✅ FIXED comma
+          ui: result?.data?.ui
+        }
       ]);
 
       console.log(result.data);
@@ -48,7 +55,6 @@ function ChatBox() {
     } catch (error: any) {
       console.error("❌ FRONTEND ERROR:", error);
 
-      // ✅ show error in chat UI
       setMessages((prev) => [
         ...prev,
         {
@@ -56,12 +62,55 @@ function ChatBox() {
           content: "⚠️ Something went wrong. Please try again.",
         },
       ]);
+
+      setLoading(false);
     }
   };
 
+  const RenderGenerativeUi = (ui: string) => {
+  if (ui === "budgetUi") {
+    return (
+      <BudgetUi
+        onSelectedOption={(v: string) => {
+          setUserInput(v);
+          onSend();
+        }}
+      />
+    );
+  } else if (ui === "groupSize") {
+    return (
+      <GroupSizeUi
+        onSelectedOption={(v: string) => {
+          setUserInput(v);
+          onSend();
+        }}
+      />
+    );
+  } else if (ui === "selectDays") {
+    return (
+      <SelectDaysUi
+        onSelectedOption={(v: string) => {
+          setUserInput(v);
+          onSend();
+        }}
+      />
+    );
+  } else if (ui === "finalUi") {
+    return (
+      <FinalUi
+        loading={true}
+        viewTrip={() => {
+          console.log("View Trip Clicked");
+        }}
+      />
+    );
+  }
+
+  return null;
+};
+
   return (
     <div className="h-[85vh] flex flex-col">
-      
       {/* Chat Messages */}
       <section className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, index) => (
@@ -79,6 +128,7 @@ function ChatBox() {
               }`}
             >
               {msg.content}
+              {RenderGenerativeUi(msg.ui ?? "")}
             </div>
           </div>
         ))}
@@ -88,7 +138,6 @@ function ChatBox() {
       <section>
         <div className="relative flex justify-center">
           <div className="w-full md:w-3/4 backdrop-blur-xl bg-white/70 dark:bg-neutral-800/60 border border-white/30 shadow-2xl rounded-3xl p-4">
-            
             <Textarea
               placeholder="Start Typing Here...."
               className="w-full h-24 bg-transparent focus:outline-none resize-none"
@@ -105,7 +154,6 @@ function ChatBox() {
                 <Send className="h-5 w-5" />
               </Button>
             </div>
-
           </div>
         </div>
       </section>

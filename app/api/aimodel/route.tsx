@@ -32,7 +32,7 @@ Rules:
 Response format (STRICT JSON ONLY):
 {
   "resp": "your message to user",
-  "ui": "source | destination | groupSize | budget | duration | interests | final"
+  "ui": "source | destination | groupSizeUi | budget | tripDuration | interests | final"
 }
 `;
 

@@ -7,7 +7,7 @@ import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
-const suggestions = [
+export const suggestions = [
   "Create a trip to Bali with friends",
   "Plan a trip in Switzerland",
   "Weekend trip to Goa",
