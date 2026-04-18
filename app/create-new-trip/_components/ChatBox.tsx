@@ -14,7 +14,7 @@ type Message = {
   role: string;
   content: string;
   ui?: string;
-};
+}; 
 
 function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
