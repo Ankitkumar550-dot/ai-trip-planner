@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { aj } from "../arcjet/route";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
   try {
     const user = await currentUser();
     const body = await req.json();
+    const { has } = await auth();
+    const hasPremiumAccess = has({ plan: 'Monthly' })
+    console.log("hasPremiumAccess", hasPremiumAccess);
     const { messages, isFinal } = body;
 
     // ✅ Validate input
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
       requested: isFinal ? 5 : 1,
     });
 
-    if (decision.isDenied()) {
+    if (decision.isDenied() && !hasPremiumAccess) {
       return NextResponse.json({
         resp: "No free credit remaining",
         ui: "limit",

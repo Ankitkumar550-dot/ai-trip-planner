@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { SignInButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -36,17 +36,19 @@ function Header() {
               <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           ))}
-          </div>
-          {/* Get started button */}
-
-          {!user ?<SignInButton mode="modal">
+        </div>
+        {/* Get started button */}
+        <div className="flex gap-5 items-center">
+          {!user ? <SignInButton mode="modal">
             <Button>Get Started</Button>
           </SignInButton> :
 
-          <Link href={'/create-new-trip'}>
-            <Button>Create New Trip</Button>
-          </Link>}
-        
+            <Link href={'/create-new-trip'}>
+              <Button>Create New Trip</Button>
+            </Link>}
+          <UserButton />
+        </div>
+
       </div>
     </header>
   );
