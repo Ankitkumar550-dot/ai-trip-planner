@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { aj } from "../arcjet/route";
+import { currentUser } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENAI_API_KEY!,
   defaultHeaders: {
-    "HTTP-Referer": "http://localhost:3000", // or your domain
+    "HTTP-Referer": "http://localhost:3000",
     "X-Title": "AI Trip Planner",
   },
 });
@@ -30,24 +32,23 @@ Rules:
 
 CRITICAL UI MAPPING RULE:
 You MUST return the exact "ui" string corresponding to the question you are currently asking:
-- If asking for Starting location, use "source"
-- If asking for Destination, use "destination"
-- If asking for Group size, use "groupSize"
-- If asking for Budget, use "budgetUi"
-- If asking for Trip duration (number of days), use "selectDays"
-- If asking for Interests or Special Requirements, use "unknown"
-- When you have ALL details and are ready to generate the trip plan, use "finalUi" and say "Great, I have all the details. I will now generate your trip plan!"
+- source
+- destination
+- groupSize
+- budgetUi
+- selectDays
+- unknown
+- finalUi
 
-Response format (STRICT JSON ONLY, NO COMMENTS):
+Response format (STRICT JSON ONLY):
 {
   "resp": "your message to user",
-  "ui": "insert ui string here based on the mapping above"
+  "ui": "insert ui string here"
 }
 `;
 
 const FINAL_PROMPT = `
 You are an AI travel agent. Based on the conversation history, generate a comprehensive JSON trip plan.
-Do NOT wrap the JSON in markdown formatting. Ensure it is strict valid JSON.
 
 Response format (STRICT JSON ONLY):
 {
@@ -56,49 +57,18 @@ Response format (STRICT JSON ONLY):
   "group_size": "Group size",
   "duration": "Trip duration",
   "origin": "Starting location",
-  "hotels": [
-    { 
-      "hotel_name": "Hotel Name", 
-      "rating": 5, 
-      "price_per_night": "$100/night", 
-      "description": "Brief description",
-      "hotel_address": "Address",
-      "hotel_image_url": "Image URL",
-      "geo_coordinates": {"latitude": 0, "longitude": 0}
-    }
-  ],
-  "itinerary": [
-    { 
-      "day": 1, 
-      "day_plan": "Brief summary of day 1 activities",
-      "best_time_to_visit_day": "Morning",
-      "activities": [
-        {
-          "place_name": "Place Name",
-          "place_details": "Description",
-          "place_image_url": "Image URL",
-          "geo_coordinates": {"latitude": 0, "longitude": 0},
-          "place_address": "Address",
-          "ticket_pricing": "Price",
-          "time_travel_each_location": "Time",
-          "best_time_to_visit": "Time"
-        }
-      ]
-    }
-  ]
+  "hotels": [],
+  "itinerary": []
 }
-CRITICAL RULES FOR GENERATION:
-1. You MUST generate an itinerary that covers the entire "duration" requested by the user. If they ask for 3 days, generate Day 1, Day 2, and Day 3.
-2. For EACH day in the itinerary, you MUST generate AT LEAST 4 activities in the "activities" array. Do not generate fewer than 4 activities per day.
-3. Keep descriptions brief and concise to reduce processing time!
 `;
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await currentUser();
     const body = await req.json();
     const { messages, isFinal } = body;
 
-    // Validate input
+    // ✅ Validate input
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
         { success: false, message: "Invalid messages format" },
@@ -106,7 +76,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call AI
+    // ✅ Arcjet Protection FIXED
+    const decision = await aj.protect(req, {
+      userId: user?.primaryEmailAddress?.emailAddress || "anonymous",
+      requested: isFinal ? 5 : 1,
+    });
+
+    if (decision.isDenied()) {
+      return NextResponse.json({
+        resp: "No free credit remaining",
+        ui: "limit",
+      });
+    }
+
+    // ✅ Call AI
     const completion = await openai.chat.completions.create({
       model: "google/gemini-2.5-flash",
       max_tokens: 8000,
@@ -120,13 +103,18 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const rawMessage = completion.choices?.[0]?.message?.content || "";
+    const rawMessage =
+      completion.choices?.[0]?.message?.content || "";
 
     console.log("🤖 AI Raw Response:", rawMessage);
 
-    let parsed;
-    let cleanedMessage = rawMessage.replace(/```json/gi, "").replace(/```/g, "").trim();
+    // ✅ Clean JSON
+    let cleanedMessage = rawMessage
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
 
+    let parsed;
     try {
       parsed = JSON.parse(cleanedMessage);
     } catch {
@@ -135,25 +123,23 @@ export async function POST(req: NextRequest) {
 
     let uiValue = parsed?.ui || "unknown";
 
-    // Aggressive Fallback: Catch hallucinated strings or missing keys
+    // ✅ Smart fallback
     if (
       uiValue.toLowerCase().includes("finalui") ||
       (uiValue === "unknown" &&
-        (parsed?.resp?.toLowerCase()?.includes("generate") ||
-          parsed?.resp?.toLowerCase()?.includes("all the details") ||
-          rawMessage?.toLowerCase()?.includes("generate") ||
-          rawMessage?.toLowerCase()?.includes("all the details")))
+        (rawMessage.toLowerCase().includes("generate") ||
+          rawMessage.toLowerCase().includes("all the details")))
     ) {
       uiValue = "finalUi";
     }
 
+    // ✅ Final response
     if (isFinal) {
       if (!parsed) {
-        // If the AI failed to generate valid JSON, wrap its raw output in our expected format
         return NextResponse.json({
           destination: "Generated Trip",
           itinerary: [],
-          tripPlan: rawMessage // Let the frontend at least display the raw text if parsing completely failed
+          tripPlan: rawMessage,
         });
       }
       return NextResponse.json(parsed);
@@ -161,10 +147,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      resp:
-        parsed?.resp ||
-        rawMessage || // ✅ fallback to raw AI text
-        "No response from AI",
+      resp: parsed?.resp || rawMessage || "No response from AI",
       ui: uiValue,
     });
 
