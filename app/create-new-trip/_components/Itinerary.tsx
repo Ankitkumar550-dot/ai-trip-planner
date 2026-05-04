@@ -1,13 +1,14 @@
+"use client"
 import { Timeline } from '@/components/ui/timeline';
 import React, { useEffect, useState } from 'react';
 import { TripInfo } from './ChatBox';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Wallet, Star, Clock, Ticket } from 'lucide-react';
+import { Wallet, Star, Clock, Ticket, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import HotelCardItem from './HotelCardItem';
 import PlaceCardItem from './PlaceCardItem';
-
+import { useTripDetail } from '@/app/provider';
 // Adding mock data fallback with the correct TripInfo structure
 const TRIP_DATA: any = {
     "destination": "Goa, India",
@@ -211,7 +212,10 @@ const TRIP_DATA: any = {
 };
 
 export default function Itinerary({ tripPlan }: { tripPlan?: string }) {
+
     const [parsedTrip, setParsedTrip] = useState<TripInfo | null>(null);
+    const tripContext = useTripDetail();
+    const tripDetailInfo = tripContext?.tripDetailInfo;
 
     useEffect(() => {
         if (tripPlan) {
@@ -224,15 +228,15 @@ export default function Itinerary({ tripPlan }: { tripPlan?: string }) {
         }
     }, [tripPlan]);
 
-    // This uses your TRIP_DATA mock data automatically if there is no real AI data yet!
-    const tripData = parsedTrip || TRIP_DATA;
+    // Use parsedTrip or context if available (no mock data!)
+    const tripData = parsedTrip || tripDetailInfo;
 
-    const timelineData = [];
+    const timelineData: any[] = [];
 
     // 1. Recommended Hotels
-    if (TRIP_DATA?.hotels) {
+    if (tripData?.hotels) {
         // Ensure hotels is an array
-        const hotelsArray = Array.isArray(TRIP_DATA.hotels) ? TRIP_DATA.hotels : [TRIP_DATA.hotels];
+        const hotelsArray = Array.isArray(tripData.hotels) ? tripData.hotels : [tripData.hotels];
 
         timelineData.push({
             title: "Recommended Hotels",
@@ -247,7 +251,13 @@ export default function Itinerary({ tripPlan }: { tripPlan?: string }) {
     }
 
     // 2. Daily Itinerary
-    TRIP_DATA?.itinerary?.map((dayData: any, index: number) => {
+    const itineraryArray = Array.isArray(tripData?.itinerary)
+        ? tripData.itinerary
+        : (typeof tripData?.itinerary === 'object' && tripData?.itinerary !== null)
+            ? Object.values(tripData.itinerary)
+            : [];
+
+    itineraryArray.forEach((dayData: any, index: number) => {
         timelineData.push({
             title: `Day ${dayData.day || index + 1}`,
             content: (
@@ -270,12 +280,20 @@ export default function Itinerary({ tripPlan }: { tripPlan?: string }) {
 
     return (
         <div className="relative w-full h-[85vh] overflow-y-auto scrollbar-hide">
-            {tripData?.itinerary?.length > 0 ? (
+            {itineraryArray.length > 0 ? (
                 <Timeline data={timelineData} tripData={tripData as TripInfo} />
             ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8 text-center">
-                    <p className="text-lg font-medium text-indigo-400">Generating your beautiful itinerary...</p>
-                    <p className="text-sm mt-2">Hang tight while we finalize the details!</p>
+                <div className="w-full h-full relative">
+                    <img
+                        src="https://wallpapers.com/images/hd/adventure-background-s0t6dibysfddsgfi.jpg"
+                        alt="travel"
+                        className="w-full h-full object-cover rounded-3xl"
+                    />
+
+                    <h2 className="absolute bottom-20 left-20 flex gap-2 items-center text-white">
+                        <ArrowLeft />
+                        Getting to know you to build perfect trip
+                    </h2>
                 </div>
             )}
         </div>

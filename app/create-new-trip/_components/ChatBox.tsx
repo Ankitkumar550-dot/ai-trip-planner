@@ -15,6 +15,7 @@ import FinalUi from "./FinalUi";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import EmptyBoxState from "./EmptyBoxState";
+import { useTripDetail, useUserDetail } from "@/app/provider";
 
 interface Message {
   role: string;
@@ -60,7 +61,7 @@ export type Activity = {
 
 };
 
-type Itinerary = {
+export type Itinerary = {
   day: number;
   day_plan: string;
   best_time_to_visit_day: string;
@@ -75,6 +76,9 @@ function ChatBox({ externalInput, onTripPlanGenerate }: { externalInput?: string
   const [isFinal, setIsFinal] = useState(false);
   const [tripDetail, setTripDetail] = useState<TripInfo>();
   const [tripId, setTripId] = useState<string | null>(null);
+  const { userDetail, setUserDetail } = useUserDetail();
+  //@ts-ignore
+  const { tripDetailInfo, setTripDetailInfo } = useTripDetail();
 
   const { user } = useUser();
   const router = useRouter();
@@ -146,6 +150,7 @@ function ChatBox({ externalInput, onTripPlanGenerate }: { externalInput?: string
           });
           setTripId(docId);
           console.log("TRIP SAVED SUCCESSFULLY WITH ID:", docId);
+          setTripDetailInfo(finalResult?.data?.trip_plan || finalResult?.data);
 
           // Automatically navigate to the beautiful trip details page!
           if (docId) {
@@ -241,7 +246,7 @@ function ChatBox({ externalInput, onTripPlanGenerate }: { externalInput?: string
   }
 
   return (
-    <div className="h-[85vh] flex flex-col">
+    <div className="h-[85vh] flex flex-col bg-secondary border rounded-2xl p-5">
       {/* Chat Messages */}
       <section className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
