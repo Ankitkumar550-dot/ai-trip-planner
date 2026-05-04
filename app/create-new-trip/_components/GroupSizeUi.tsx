@@ -5,47 +5,50 @@ export const SelectTravelesList = [
     id: 1,
     title: 'Just Me',
     desc: 'A sole traveler in exploration',
-    Icon: '',
+    Icon: '✈️',
     people: '1'
   },
   {
     id: 2,
     title: 'A Couple',
     desc: 'Two travelers in tandem',
-    Icon: '',
+    Icon: '🥂',
     people: '2 people'
   },
   {
     id: 3,
     title: 'Family',
     desc: 'A group of explorers',
-    Icon: '',
+    Icon: '🏡',
     people: '3 to 5 People'
   },
   {
     id: 4,
-    title: 'Friend',
+    title: 'Friends',
     desc: 'A bunch of thrill-seekers',
-    Icon: '',
+    Icon: '⛵',
     people: '5 to 10 People'
   },
 ];
 
 function GroupSizeUi({ onSelectedOption }: any) {
   return (
-    <div className='grid grid-cols-2 md:grid-cols-4 gap-2 items-center mt-1'>
-      {SelectTravelesList.map((item, index) => (
+    <div className='flex flex-col gap-3 mt-4 w-full'>
+      {SelectTravelesList.map((item) => (
         <div
-          key={index}
-          className='p-3 border rounded-2xl bg-white hover:border-primary cursor-pointer'
+          key={item.id}
+          className='p-3 border rounded-xl bg-white hover:border-gray-400 hover:shadow-sm cursor-pointer transition-all flex items-center gap-3'
           onClick={() => onSelectedOption(item.title + ":" + item.people)}
         >
-          <h2>{item.Icon}</h2>
-          <h2>{item.title}</h2>
+          <span className="text-2xl">{item.Icon}</span>
+          <div>
+            <h2 className="font-medium">{item.title}</h2>
+            <p className="text-sm text-gray-500">{item.desc}</p>
+          </div>
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default GroupSizeUi

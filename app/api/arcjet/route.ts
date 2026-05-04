@@ -16,6 +16,7 @@ const aj = arcjet({
 });
 
 export async function GET(req: Request) {
+
   const userId = "user123"; // Replace with your authenticated user ID
   const decision = await aj.protect(req, { userId, requested: 5 }); // Deduct 5 tokens from the bucket
   console.log("Arcjet decision", decision);

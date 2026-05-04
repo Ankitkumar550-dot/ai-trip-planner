@@ -1,4 +1,3 @@
-
 import React from 'react'
 
 export const SelectBudgetOption = [
@@ -6,42 +5,37 @@ export const SelectBudgetOption = [
         id: 1,
         title: 'Cheap',
         desc: 'Stay conscious of costs',
-        icon: '',
-        color: 'bg-green-100 text-green-600'
+        icon: '💵',
     },
      {
         id: 2,
         title: 'Moderate',
         desc: 'Keep cost on the average side',
-        icon: '',
-        color: 'bg-yellow-100 text-yellow-600'
+        icon: '💰',
     },
      {
         id: 3,
         title: 'Luxury',
-        desc: 'Stay conscious of costs',
-        icon: '',
-        color: 'bg-purple-100 text-purple-600'
+        desc: "Don't worry about cost",
+        icon: '💸',
     },
 ]
 
 function BudgetUi({onSelectedOption}:any) {
   return (
-<div>
-     <div className='grid grid-cols-3 md:grid-cols-4 gap-2 items-center mt-1'>
-          {SelectBudgetOption.map((item, index) => (
-            <div
-              key={index}
-              className='p-3 border rounded-2xl bg-white hover:border-primary cursor-pointer'
-              onClick={() => onSelectedOption(item.title + ":" + item.desc)}
-            >
-              <div className={'text-3xl p-3 rounded-full ${item.color}' }>{item.icon}</div>
-              <h2 className='text-lg font-semibold mt-2'>{item.title}</h2>
-              <p className='text-sm text-gray-500'>{item.desc}</p>
-            </div>
-          ))}
+    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 w-full'>
+      {SelectBudgetOption.map((item, index) => (
+        <div
+          key={index}
+          className='p-4 border rounded-2xl bg-white hover:border-gray-400 hover:shadow-sm cursor-pointer transition-all flex flex-col'
+          onClick={() => onSelectedOption(item.title + ":" + item.desc)}
+        >
+          <div className='text-4xl mb-3'>{item.icon}</div>
+          <h2 className='text-base font-bold text-gray-900'>{item.title}</h2>
+          <p className='text-sm text-gray-500 mt-1 leading-snug'>{item.desc}</p>
         </div>
-</div>
+      ))}
+    </div>
   )
 }
 

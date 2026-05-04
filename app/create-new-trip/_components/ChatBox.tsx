@@ -4,51 +4,164 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import { Loader, Send } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import GroupSizeUi from "./GroupSizeUi";
 import BudgetUi from "./BudgetUi";
 import SelectDaysUi from "./SelectDaysUi";
 import FinalUi from "./FinalUi";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import EmptyBoxState from "./EmptyBoxState";
 
-type Message = {
+interface Message {
   role: string;
   content: string;
   ui?: string;
-}; 
+}
 
-function ChatBox() {
+export interface TripInfo {
+  destination: string;
+  budget: string;
+  group_size: string;
+  duration: string;
+  origin: String;
+  hotels: Hotel;
+  itinerary: Itinerary;
+}
+
+export type Hotel = {
+  hotel_name: string;
+  hotel_address: string;
+  price_per_night: string;
+  hotel_image_url: string;
+  geo_coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  rating: number;
+  description: string;
+};
+
+export type Activity = {
+  place_name: string;
+  place_details: string;
+  place_image_url: string;
+  geo_coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  place_address: string;
+  ticket_pricing: string;
+  time_travel_each_location: string;
+  best_time_to_visit: string;
+
+};
+
+type Itinerary = {
+  day: number;
+  day_plan: string;
+  best_time_to_visit_day: string;
+  activities: Activity[];
+
+};
+function ChatBox({ externalInput, onTripPlanGenerate }: { externalInput?: string; onTripPlanGenerate?: (plan: string) => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const saveTripDetails = useMutation(api.tripDetail.CreateTripDeatils);
+  const [isFinal, setIsFinal] = useState(false);
+  const [tripDetail, setTripDetail] = useState<TripInfo>();
+  const [tripId, setTripId] = useState<string | null>(null);
 
-  const onSend = async () => {
-    if (!userInput.trim()) return;
+  const { user } = useUser();
+  const router = useRouter();
 
-    setLoading(true);
+  useEffect(() => {
+    if (externalInput) {
+      setUserInput(externalInput);
+    }
+  }, [externalInput]);
 
-    const newMsg: Message = {
-      role: "user",
-      content: userInput,
-    };
-
-    const updatedMessages = [...messages, newMsg];
-
-    setMessages(updatedMessages);
-    setUserInput("");
-
+  const onSend = async (customInput?: string) => {
     try {
+      const inputToSend = customInput || userInput;
+      if (!inputToSend?.trim()) return;
+
+      setLoading(true);
+
+      const newMsg: Message = {
+        role: "user",
+        content: inputToSend ?? ' '
+      };
+
+      const updatedMessages = [...messages, newMsg];
+
+      setMessages(updatedMessages);
+      setUserInput("");
+
       const result = await axios.post("/api/aimodel", {
         messages: updatedMessages,
+        isFinal: isFinal
       });
+      console.log("Trip", result.data);
 
-      setMessages((prev: Message[]) => [
+      setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: result?.data?.resp || "No response", // ✅ FIXED comma
-          ui: result?.data?.ui
-        }
+          content: result?.data?.resp || "",
+          ui: result?.data?.ui,
+        },
       ]);
+
+      const responseUi = (result?.data?.ui || "").toLowerCase().trim();
+
+      if (responseUi === "final" || responseUi === "finalui") {
+        try {
+          console.log("TRIGGERING SECOND API CALL FOR FINAL JSON");
+          // Trigger the second API call to get the full JSON trip plan
+          const finalResult = await axios.post("/api/aimodel", {
+            messages: updatedMessages,
+            isFinal: true
+          });
+
+          console.log("FINAL JSON RECEIVED:", finalResult.data);
+
+          if (Object.keys(finalResult.data).length === 0) {
+            console.warn("AI returned empty JSON for the final trip plan!");
+          }
+
+          const planJsonText = JSON.stringify(finalResult.data, null, 2);
+          onTripPlanGenerate?.(planJsonText);
+
+          const docId = uuidv4();
+          await saveTripDetails({
+            tripId: docId,
+            userEmail: user?.primaryEmailAddress?.emailAddress || "",
+            tripPlan: planJsonText,
+            destination: externalInput || "",
+          });
+          setTripId(docId);
+          console.log("TRIP SAVED SUCCESSFULLY WITH ID:", docId);
+
+          // Automatically navigate to the beautiful trip details page!
+          if (docId) {
+            router.push(`/trip-details/${docId}`);
+          }
+        } catch (e: any) {
+          console.error("Failed to generate or save final trip plan", e);
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `Error saving trip: ${e.message || String(e)}`,
+            },
+          ]);
+        }
+      }
 
       console.log(result.data);
       setLoading(false);
@@ -67,71 +180,95 @@ function ChatBox() {
     }
   };
 
-  const RenderGenerativeUi = (ui: string) => {
-  if (ui === "budgetUi") {
-    return (
-      <BudgetUi
-        onSelectedOption={(v: string) => {
-          setUserInput(v);
-          onSend();
-        }}
-      />
-    );
-  } else if (ui === "groupSize") {
-    return (
-      <GroupSizeUi
-        onSelectedOption={(v: string) => {
-          setUserInput(v);
-          onSend();
-        }}
-      />
-    );
-  } else if (ui === "selectDays") {
-    return (
-      <SelectDaysUi
-        onSelectedOption={(v: string) => {
-          setUserInput(v);
-          onSend();
-        }}
-      />
-    );
-  } else if (ui === "finalUi") {
-    return (
-      <FinalUi
-        loading={true}
-        viewTrip={() => {
-          console.log("View Trip Clicked");
-        }}
-      />
-    );
-  }
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
-  return null;
-};
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 100);
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const RenderGenerativeUi = (ui: string) => {
+    const normalizedUi = ui?.toLowerCase()?.trim() || "";
+
+    if (normalizedUi === "budgetui" || normalizedUi === "budget") {
+      return (
+        <BudgetUi
+          onSelectedOption={(v: string) => {
+            setUserInput(v);
+            onSend(v);
+          }}
+        />
+      );
+    } else if (normalizedUi === "groupsize" || normalizedUi === "group_size") {
+      return (
+        <GroupSizeUi
+          onSelectedOption={(v: string) => {
+            setUserInput(v);
+            onSend(v);
+          }}
+        />
+      );
+    } else if (normalizedUi === "selectdays" || normalizedUi === "duration") {
+      return (
+        <SelectDaysUi
+          onSelectedOption={(v: string) => {
+            setUserInput(v);
+            onSend(v);
+          }}
+        />
+      );
+    } else if (normalizedUi === "finalui" || normalizedUi === "final") {
+      return (
+        <FinalUi
+          loading={!tripId}
+          viewTrip={() => {
+            if (tripId) {
+              router.push(`/trip-details/${tripId}`);
+            }
+
+          }}
+
+        />
+      );
+    }
+
+    return null;
+  }
 
   return (
     <div className="h-[85vh] flex flex-col">
       {/* Chat Messages */}
       <section className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
+        {messages.length === 0 ? (
+          <EmptyBoxState onSuggestionSelect={(suggestion) => {
+            setUserInput(suggestion);
+            onSend(suggestion);
+          }} />
+        ) : (
+          messages.map((msg, index) => (
             <div
-              className={`max-w-lg px-4 py-2 rounded-lg ${
-                msg.role === "user"
+              key={index}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
+                }`}
+            >
+              <div
+                className={`max-w-lg px-4 py-2 rounded-lg ${msg.role === "user"
                   ? "bg-primary text-white"
                   : "bg-gray-100 text-black"
-              }`}
-            >
-              {msg.content}
-              {RenderGenerativeUi(msg.ui ?? "")}
+                  }`}
+              >
+                {msg.content}
+                {RenderGenerativeUi(msg.ui ?? "")}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
+        <div ref={messagesEndRef} />
       </section>
 
       {/* Input Box */}
@@ -148,10 +285,11 @@ function ChatBox() {
             <div className="flex justify-end">
               <Button
                 size="icon"
-                className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition"
-                onClick={onSend}
+                className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => onSend()}
+                disabled={loading}
               >
-                <Send className="h-5 w-5" />
+                {loading ? <Loader className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
             </div>
           </div>

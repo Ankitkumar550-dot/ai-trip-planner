@@ -17,7 +17,8 @@ export const CreateNewUser=mutation({
             const userData={
                 name:args.name,
                 email:args.email,
-                imageUrl:args.imageUrl
+                imageUrl:args.imageUrl,
+                subscription: "free"
             }
             const result=await ctx.db.insert('UserTable',userData)
             return userData;

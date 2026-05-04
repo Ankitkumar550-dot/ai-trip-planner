@@ -7,7 +7,7 @@ import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
-export const suggestions = [
+export const Suggestions = [
   "Create a trip to Bali with friends",
   "Plan a trip in Switzerland",
   "Weekend trip to Goa",
@@ -15,12 +15,11 @@ export const suggestions = [
 ];
 
 function Hero() {
-  const {user}=useUser();
-  const router= useRouter();
+  const { user } = useUser();
+  const router = useRouter();
 
-  const onSend=()=>{
-    if(!user)
-    {
+  const onSend = () => {
+    if (!user) {
       router.push('/sign-in')
       return;
     }
@@ -29,7 +28,7 @@ function Hero() {
 
   return (
     <section className="relative min-h-screen pt-28 flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 px-4 overflow-hidden">
-      
+
       {/* Background Blur */}
       <div className="absolute top-10 left-10 w-72 h-72 bg-purple-400/30 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-400/30 rounded-full blur-3xl animate-pulse" />
@@ -56,7 +55,7 @@ function Hero() {
               className="w-full h-24 bg-transparent focus:outline-none resize-none"
             />
             <div className="flex justify-end">
-              <Button size={'icon'} className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition" onClick={() =>onSend()}>
+              <Button size={'icon'} className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition" onClick={() => onSend()}>
                 <Send className="h-5 w-5" />
               </Button>
             </div>
@@ -65,7 +64,7 @@ function Hero() {
 
         {/* Suggestions */}
         <div className="flex flex-wrap justify-center gap-4 mt-6">
-          {suggestions.map((item, index) => (
+          {Suggestions.map((item, index) => (
             <div
               key={index}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/70 dark:bg-neutral-800/70 backdrop-blur-md border hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition cursor-pointer"

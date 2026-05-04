@@ -27,7 +27,7 @@ export function PopularCityList() {
   );
 }
 
-const TravelContent = ({ description }) => {
+const TravelContent = ({ description }: { description: string }) => {
   return (
     <div className="bg-white dark:bg-neutral-800 p-8 md:p-12 rounded-3xl shadow-xl">
       <p className="text-neutral-700 dark:text-neutral-300 text-lg md:text-xl leading-relaxed max-w-3xl mx-auto text-center">
