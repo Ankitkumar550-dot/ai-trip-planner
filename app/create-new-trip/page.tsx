@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import ChatBox from "./_components/ChatBox";
 import { Plane } from "lucide-react";
-
 import Itinerary from "./_components/Itinerary";
+import { useSearchParams } from "next/navigation";
 
-
-
-export default function CreateNewTrip() {
-  const [selectedLocation, setSelectedLocation] = useState<string>("");
+function CreateNewTripContent() {
+  const searchParams = useSearchParams();
+  const initialInput = searchParams.get('input') || "";
   const [tripPlan, setTripPlan] = useState<string>("");
 
   return (
     <div className="min-h-screen pt-28 px-6 md:px-10 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
-
 
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
@@ -24,7 +22,6 @@ export default function CreateNewTrip() {
           Chat with AI and build your perfect travel experience
         </p>
       </div>
-
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
@@ -38,42 +35,24 @@ export default function CreateNewTrip() {
               <h2 className="font-semibold text-lg">AI Trip Assistant</h2>
             </div>
 
-            <ChatBox externalInput={selectedLocation} onTripPlanGenerate={setTripPlan} />
+            <ChatBox externalInput={initialInput} onTripPlanGenerate={setTripPlan} />
           </div>
         </div>
 
+        {/* Right: Itinerary / Wallpaper Section */}
         <div className="flex flex-col gap-6">
-          <Itinerary />
-
-          <div className="relative bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-5 border border-white/30 hover:scale-[1.02] transition duration-300">
-            <h2 className="font-semibold text-lg mb-3">
-              📍 Your Trip Plan
-            </h2>
-
-            <div className="text-gray-600 max-h-[300px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
-              {tripPlan ? (
-                <div className="p-4 bg-white rounded-xl shadow-inner border border-gray-100">
-                  {tripPlan}
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 1: Arrival & Local Sightseeing
-                  </li>
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 2: Adventure Activities
-                  </li>
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 3: Explore Culture & Food
-                  </li>
-                </ul>
-              )}
-            </div>
-          </div>
+           <Itinerary tripPlan={tripPlan} />
         </div>
 
       </div>
     </div>
-
   );
+}
+
+export default function CreateNewTrip() {
+  return (
+    <Suspense fallback={<div className="pt-32 text-center">Loading Planner...</div>}>
+      <CreateNewTripContent />
+    </Suspense>
+  )
 }

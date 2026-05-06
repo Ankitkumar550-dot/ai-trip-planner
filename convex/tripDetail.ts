@@ -30,3 +30,13 @@ export const getTrip = query({
         return trip;
     },
 });
+
+export const getTripsByUser = query({
+    args: {
+        userEmail: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const trips = await ctx.db.query("TripDetailTable").filter(q => q.and(q.eq(q.field("userEmail"), args.userEmail))).collect();
+        return trips;
+    },
+});

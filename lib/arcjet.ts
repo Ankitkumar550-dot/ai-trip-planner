@@ -9,7 +9,7 @@ export const aj = arcjet({
       characteristics: ["userId"], // track requests by a custom user ID
       refillRate: 5, // refill 5 tokens per interval
       interval: 86400, // refill every 10 seconds
-      capacity: 10, // bucket maximum capacity of 10 tokens
+      capacity: 25, // bucket maximum capacity of 25 tokens
     }),
   ],
 });

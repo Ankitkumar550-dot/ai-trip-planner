@@ -15,29 +15,27 @@ const openai = new OpenAI({
 const PROMPT = `
 You are an AI Trip Planner Agent. Your goal is to help users plan a trip step by step.
 
-Ask questions one by one in this order and wait for user response:
-
-1. Starting location (source)
+You must ask the user for the following information one by one in this exact order:
+1. Starting location (origin/source)
 2. Destination city or country
 3. Group size (solo, couple, family, friends)
 4. Budget (Low, Medium, High)
 5. Trip duration (number of days)
-6. Trip interests (adventure, sightseeing, cultural, food, nightlife, relaxation)
-7. Special requirements or preferences
 
-Rules:
-- Ask ONLY one question at a time
-- Be friendly and conversational
-- Do NOT skip steps
+CRITICAL INSTRUCTIONS:
+- Review the chat history carefully. Identify which questions have already been answered.
+- Acknowledge the user's last answer, then ask the NEXT question in the list.
+- If the user provides a location, accept it and move to the next step.
+- Ask ONLY one question at a time. Do NOT ask for multiple things at once.
+- Once you have gathered ALL 5 pieces of information, you MUST return "finalUi" for the ui field and say you are generating the trip.
 
 CRITICAL UI MAPPING RULE:
 You MUST return the exact "ui" string corresponding to the question you are currently asking:
 - source
 - destination
-- groupSize
-- budgetUi
-- selectDays
-- unknown
+- group_size
+- budget
+- duration
 - finalUi
 
 Response format (STRICT JSON ONLY):
@@ -58,40 +56,22 @@ Response format (STRICT JSON ONLY):
   "group_size": "Group size",
   "duration": "Trip duration",
   "origin": "Starting location",
-  "hotels": [
-    {
-      "hotel_name": "string",
-      "hotel_address": "string",
-      "price_per_night": "string",
-      "hotel_image_url": "string",
-      "geo_coordinates": { "latitude": 0, "longitude": 0 },
-      "rating": 5,
-      "description": "string"
-    }
-  ],
-  "itinerary": [
-    {
-      "day": 1,
-      "day_plan": "string",
-      "best_time_to_visit_day": "string",
-      "activities": [
-        {
-          "place_name": "string",
-          "place_details": "string",
-          "place_image_url": "string",
-          "geo_coordinates": { "latitude": 0, "longitude": 0 },
-          "place_address": "string",
-          "ticket_pricing": "string",
-          "time_travel_each_location": "string",
-          "best_time_to_visit": "string"
-        }
-      ]
-    }
-  ]
+  "hotels": [],
+  "itinerary": []
 }
 `;
 
 export async function POST(req: NextRequest) {
+    const models = [
+      "google/gemini-2.0-flash-001",
+      "google/gemini-2.0-flash-lite-preview-02-05",
+      "google/gemini-flash-1.5-8b",
+      "deepseek/deepseek-chat",
+      "meta-llama/llama-3.3-70b-instruct",
+    ];
+
+  let lastError: any = null;
+
   try {
     const user = await currentUser();
     const body = await req.json();
@@ -107,7 +87,11 @@ export async function POST(req: NextRequest) {
     console.log("hasPremiumAccess", hasPremiumAccess);
     const { messages, isFinal } = body;
 
-    // ✅ Validate input
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("❌ MISSING OPENAI_API_KEY");
+      return NextResponse.json({ success: false, message: "Server configuration error: Missing API Key" }, { status: 500 });
+    }
+
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
         { success: false, message: "Invalid messages format" },
@@ -131,7 +115,7 @@ export async function POST(req: NextRequest) {
     // ✅ Call AI
     const completion = await openai.chat.completions.create({
       model: "google/gemini-2.5-flash",
-      max_tokens: 6000,
+      max_tokens: 8000,
       response_format: { type: "json_object" },
       messages: [
         {
@@ -142,63 +126,92 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const rawMessage =
-      completion.choices?.[0]?.message?.content || "";
+        const rawMessage = completion.choices?.[0]?.message?.content || "";
+        console.log(`✅ AI Response Received (${currentModel}):`, rawMessage);
 
-    console.log("🤖 AI Raw Response:", rawMessage);
+        // ✅ Robust JSON Cleaning
+        let cleanedMessage = rawMessage
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
 
-    // ✅ Clean JSON
-    let cleanedMessage = rawMessage
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
+        let parsed;
+        try {
+          parsed = JSON.parse(cleanedMessage);
+        } catch {
+          // If JSON.parse fails, try to extract JSON with regex
+          const jsonMatch = cleanedMessage.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              parsed = JSON.parse(jsonMatch[0]);
+            } catch {
+              parsed = null;
+            }
+          } else {
+            parsed = null;
+          }
+        }
 
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanedMessage);
-    } catch {
-      parsed = null;
-    }
+        let uiValue = parsed?.ui || "unknown";
 
-    let uiValue = parsed?.ui || "unknown";
+        // ✅ Smart fallback for UI
+        if (
+          (uiValue.toLowerCase().includes("finalui") || uiValue === "unknown") &&
+          (rawMessage.toLowerCase().includes("generate") || rawMessage.toLowerCase().includes("all the details") || isFinal)
+        ) {
+          uiValue = "finalUi";
+        }
 
-    // ✅ Smart fallback
-    if (
-      uiValue.toLowerCase().includes("finalui") ||
-      (uiValue === "unknown" &&
-        (rawMessage.toLowerCase().includes("generate") ||
-          rawMessage.toLowerCase().includes("all the details")))
-    ) {
-      uiValue = "finalUi";
-    }
+        if (isFinal) {
+          if (!parsed) {
+            return NextResponse.json({
+              destination: "Generated Trip",
+              itinerary: [],
+              tripPlan: rawMessage,
+            });
+          }
+          return NextResponse.json(parsed);
+        }
 
-    // ✅ Final response
-    if (isFinal) {
-      if (!parsed) {
         return NextResponse.json({
-          destination: "Generated Trip",
-          itinerary: [],
-          tripPlan: rawMessage,
+          success: true,
+          resp: parsed?.resp || rawMessage || "No response from AI",
+          ui: uiValue,
         });
+
+      } catch (error: any) {
+        lastError = error;
+        const status = error?.status || error?.response?.status;
+        console.warn(`⚠️ Attempt ${attempt} failed with status ${status}:`, error?.message);
+
+        // If it's a 429, 404 or 5xx, try the next model after a short delay
+        if (status === 429 || status === 404 || status >= 500) {
+          if (i < models.length - 1) {
+            console.log(`🔄 Retrying with next model in 1s...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Incremental delay
+            continue;
+          }
+        } else {
+          // For other errors (400, 401, etc.), don't retry as they are likely permanent
+          break;
+        }
       }
-      return NextResponse.json(parsed);
     }
 
-    return NextResponse.json({
-      success: true,
-      resp: parsed?.resp || rawMessage || "No response from AI",
-      ui: uiValue,
-    });
+    // If we get here, all models failed
+    throw lastError || new Error("All AI models failed to respond");
 
   } catch (error: any) {
-    console.error("❌ API Error:", error);
-
+    console.error("❌ Final API Error:", error);
+    const status = error?.status || 500;
+    
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Something went wrong",
+        message: error?.message || "Something went wrong after multiple attempts",
+        code: error?.code || "INTERNAL_ERROR"
       },
-      { status: 500 }
+      { status: status }
     );
   }
 }

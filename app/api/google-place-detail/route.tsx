@@ -16,7 +16,13 @@ export async function POST(req: NextRequest) {
         const result = await axios.post(BASE_URL, {
             textQuery: placeName
         }, config);
-        return NextResponse.json(result?.data);
+
+        let photoUrl = null;
+        if (result?.data?.places?.[0]?.photos?.[0]?.name) {
+            photoUrl = `https://places.googleapis.com/v1/${result.data.places[0].photos[0].name}/media?maxHeightPx=1000&maxWidthPx=1000&key=${process.env.GOOGLE_PLACE_API_KEY}`;
+        }
+
+        return NextResponse.json({ ...result?.data, photoUrl });
     } catch (e: any) {
         console.error("Google Place API Error:", e.response?.data || e.message);
         return NextResponse.json({ error: e.response?.data || e.message }, { status: 500 });
