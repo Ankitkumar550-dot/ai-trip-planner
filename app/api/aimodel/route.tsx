@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { aj } from "../arcjet/route";
+import { aj } from "@/lib/arcjet";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
@@ -55,6 +55,19 @@ Response format (STRICT JSON ONLY):
   "group_size": "Group size",
   "duration": "Trip duration",
   "origin": "Starting location",
+  "route_plan": {
+    "summary": "Overall travel strategy summary",
+    "steps": [
+      {
+        "type": "Taxi/Train/Flight/Bus",
+        "description": "Step description (e.g., Mathura to Delhi)",
+        "distance": "Distance estimate",
+        "duration": "Time estimate",
+        "price_estimate": "Price range",
+        "additional_info": "Any useful tips or details"
+      }
+    ]
+  },
   "hotels": [
     {
       "hotel_name": "Name of the hotel",
@@ -95,6 +108,16 @@ Response format (STRICT JSON ONLY):
 `;
 
 export async function POST(req: NextRequest) {
+    const models = [
+      "google/gemini-2.0-flash-001",
+      "google/gemini-2.0-flash-lite-preview-02-05",
+      "google/gemini-flash-1.5-8b",
+      "deepseek/deepseek-chat",
+      "meta-llama/llama-3.3-70b-instruct",
+    ];
+
+  let lastError: any = null;
+
   try {
     const user = await currentUser();
     const body = await req.json();
@@ -103,19 +126,19 @@ export async function POST(req: NextRequest) {
     console.log("hasPremiumAccess", hasPremiumAccess);
     const { messages, isFinal } = body;
 
-    // ✅ Validate input
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid messages format" },
-        { status: 400 }
-      );
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("❌ MISSING OPENAI_API_KEY");
+      return NextResponse.json({ success: false, message: "Server configuration error: Missing API Key" }, { status: 500 });
     }
 
-    // Clean messages to ensure standard format
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json({ success: false, message: "Invalid messages format" }, { status: 400 });
+    }
+
     const cleanMessages = messages.map((m: any) => {
-      // If the assistant's past message is plain text, let's wrap it in JSON so the AI maintains consistent context
       let contentStr = m.content;
-      if (m.role === 'assistant') {
+      // Only wrap in JSON if it doesn't already look like a JSON object
+      if (m.role === 'assistant' && typeof m.content === 'string' && !m.content.trim().startsWith('{')) {
         contentStr = JSON.stringify({
           resp: m.content,
           ui: m.ui || "unknown"
@@ -127,90 +150,115 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // ✅ Arcjet Protection FIXED
-    const decision = await aj.protect(req, {
-      userId: user?.primaryEmailAddress?.emailAddress || "anonymous",
-      requested: isFinal ? 5 : 1,
-    });
+    console.log("🚀 Starting AI Request...", { isFinal, messageCount: cleanMessages.length });
 
-    // if (decision.isDenied() && !hasPremiumAccess) {
-    //   return NextResponse.json({
-    //     resp: "No free credit remaining",
-    //     ui: "limit",
-    //   });
-    // }
+    // ✅ Retry & Fallback Loop
+    for (let i = 0; i < models.length; i++) {
+      const currentModel = models[i];
+      const attempt = i + 1;
 
-    // ✅ Call AI
-    const completion = await openai.chat.completions.create({
-      model: "google/gemini-2.0-flash-001",
-      max_tokens: 8000,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: isFinal ? FINAL_PROMPT : PROMPT,
-        },
-        ...cleanMessages,
-      ],
-    });
-
-    const rawMessage =
-      completion.choices?.[0]?.message?.content || "";
-
-    console.log("🤖 AI Raw Response:", rawMessage);
-
-    // ✅ Clean JSON
-    let cleanedMessage = rawMessage
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanedMessage);
-    } catch {
-      parsed = null;
-    }
-
-    let uiValue = parsed?.ui || "unknown";
-
-    // ✅ Smart fallback
-    if (
-      uiValue.toLowerCase().includes("finalui") ||
-      (uiValue === "unknown" &&
-        (rawMessage.toLowerCase().includes("generate") ||
-          rawMessage.toLowerCase().includes("all the details")))
-    ) {
-      uiValue = "finalUi";
-    }
-
-    // ✅ Final response
-    if (isFinal) {
-      if (!parsed) {
-        return NextResponse.json({
-          destination: "Generated Trip",
-          itinerary: [],
-          tripPlan: rawMessage,
+      try {
+        console.log(`🤖 Attempt ${attempt} using model: ${currentModel}`);
+        
+        const completion = await openai.chat.completions.create({
+          model: currentModel,
+          max_tokens: 8000,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: isFinal ? FINAL_PROMPT : PROMPT,
+            },
+            ...cleanMessages,
+          ],
         });
+
+        const rawMessage = completion.choices?.[0]?.message?.content || "";
+        console.log(`✅ AI Response Received (${currentModel}):`, rawMessage);
+
+        // ✅ Robust JSON Cleaning
+        let cleanedMessage = rawMessage
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
+
+        let parsed;
+        try {
+          parsed = JSON.parse(cleanedMessage);
+        } catch {
+          // If JSON.parse fails, try to extract JSON with regex
+          const jsonMatch = cleanedMessage.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              parsed = JSON.parse(jsonMatch[0]);
+            } catch {
+              parsed = null;
+            }
+          } else {
+            parsed = null;
+          }
+        }
+
+        let uiValue = parsed?.ui || "unknown";
+
+        // ✅ Smart fallback for UI
+        if (
+          (uiValue.toLowerCase().includes("finalui") || uiValue === "unknown") &&
+          (rawMessage.toLowerCase().includes("generate") || rawMessage.toLowerCase().includes("all the details") || isFinal)
+        ) {
+          uiValue = "finalUi";
+        }
+
+        if (isFinal) {
+          if (!parsed) {
+            return NextResponse.json({
+              destination: "Generated Trip",
+              itinerary: [],
+              tripPlan: rawMessage,
+            });
+          }
+          return NextResponse.json(parsed);
+        }
+
+        return NextResponse.json({
+          success: true,
+          resp: parsed?.resp || rawMessage || "No response from AI",
+          ui: uiValue,
+        });
+
+      } catch (error: any) {
+        lastError = error;
+        const status = error?.status || error?.response?.status;
+        console.warn(`⚠️ Attempt ${attempt} failed with status ${status}:`, error?.message);
+
+        // If it's a 429, 404 or 5xx, try the next model after a short delay
+        if (status === 429 || status === 404 || status >= 500) {
+          if (i < models.length - 1) {
+            console.log(`🔄 Retrying with next model in 1s...`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Incremental delay
+            continue;
+          }
+        } else {
+          // For other errors (400, 401, etc.), don't retry as they are likely permanent
+          break;
+        }
       }
-      return NextResponse.json(parsed);
     }
 
-    return NextResponse.json({
-      success: true,
-      resp: parsed?.resp || rawMessage || "No response from AI",
-      ui: uiValue,
-    });
+    // If we get here, all models failed
+    throw lastError || new Error("All AI models failed to respond");
 
   } catch (error: any) {
-    console.error("❌ API Error:", error);
-
+    console.error("❌ Final API Error:", error);
+    const status = error?.status || 500;
+    
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Something went wrong",
+        message: error?.message || "Something went wrong after multiple attempts",
+        code: error?.code || "INTERNAL_ERROR"
       },
-      { status: 500 }
+      { status: status }
     );
   }
-}
+}

@@ -18,12 +18,14 @@ function Hero() {
   const { user } = useUser();
   const router = useRouter();
 
-  const onSend = () => {
+  const [input, setInput] = React.useState("");
+  const onSend = (val?: string) => {
+    const finalInput = val || input;
     if (!user) {
-      router.push('/sign-in')
+      router.push(`/sign-in?redirect_url=/create-new-trip?input=${encodeURIComponent(finalInput)}`)
       return;
     }
-    router.push('create-new-trip')
+    router.push(`/create-new-trip?input=${encodeURIComponent(finalInput)}`)
   }
 
   return (
@@ -53,9 +55,11 @@ function Hero() {
             <Textarea
               placeholder="Create a 5-day trip to Paris from India..."
               className="w-full h-24 bg-transparent focus:outline-none resize-none"
+              onChange={(e) => setInput(e.target.value)}
+              value={input}
             />
             <div className="flex justify-end">
-              <Button size={'icon'} className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition" onClick={() => onSend()}>
+              <Button size={'icon'} className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition" onClick={() => onSend(input)}>
                 <Send className="h-5 w-5" />
               </Button>
             </div>
@@ -67,6 +71,7 @@ function Hero() {
           {Suggestions.map((item, index) => (
             <div
               key={index}
+              onClick={() => onSend(item)}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/70 dark:bg-neutral-800/70 backdrop-blur-md border hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition cursor-pointer"
             >
               <Globe2 className="h-5 w-5" />

@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import ChatBox from "./_components/ChatBox";
 import { Plane } from "lucide-react";
-
 import Itinerary from "./_components/Itinerary";
+import { useSearchParams } from "next/navigation";
 
-
-
-export default function CreateNewTrip() {
-  const [selectedLocation, setSelectedLocation] = useState<string>("");
+function CreateNewTripContent() {
+  const searchParams = useSearchParams();
+  const initialInput = searchParams.get('input') || "";
   const [tripPlan, setTripPlan] = useState<string>("");
 
   return (
     <div className="min-h-screen pt-28 px-6 md:px-10 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
-
 
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
@@ -24,7 +22,6 @@ export default function CreateNewTrip() {
           Chat with AI and build your perfect travel experience
         </p>
       </div>
-
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
@@ -38,16 +35,24 @@ export default function CreateNewTrip() {
               <h2 className="font-semibold text-lg">AI Trip Assistant</h2>
             </div>
 
-            <ChatBox externalInput={selectedLocation} onTripPlanGenerate={setTripPlan} />
+            <ChatBox externalInput={initialInput} onTripPlanGenerate={setTripPlan} />
           </div>
         </div>
 
+        {/* Right: Itinerary / Wallpaper Section */}
         <div className="flex flex-col gap-6">
-          <Itinerary tripPlan={tripPlan} />
+           <Itinerary tripPlan={tripPlan} />
         </div>
 
       </div>
     </div>
-
   );
+}
+
+export default function CreateNewTrip() {
+  return (
+    <Suspense fallback={<div className="pt-32 text-center">Loading Planner...</div>}>
+      <CreateNewTripContent />
+    </Suspense>
+  )
 }

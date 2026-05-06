@@ -28,15 +28,30 @@ export interface TripInfo {
   budget: string;
   group_size: string;
   duration: string;
-  origin: String;
-  hotels: Hotel;
-  itinerary: Itinerary;
+  origin: string;
+  route_plan?: {
+    summary: string;
+    steps: {
+      type: string;
+      description: string;
+      distance: string;
+      duration: string;
+      price_estimate: string;
+      additional_info?: string;
+    }[];
+  };
+  hotels?: Hotel[];
+  hotel_options?: Hotel[];
+  hotel_recommendations?: Hotel[];
+  hotelRecommendations?: Hotel[];
+  itinerary: Itinerary[];
 }
 
 export type Hotel = {
   hotel_name: string;
   hotel_address: string;
   price_per_night: string;
+  price?: string; // Fallback for some models
   hotel_image_url: string;
   geo_coordinates: {
     latitude: number;
@@ -172,12 +187,20 @@ function ChatBox({ externalInput, onTripPlanGenerate }: { externalInput?: string
       setLoading(false);
     } catch (error: any) {
       console.error("❌ FRONTEND ERROR:", error);
+      
+      let errorMessage = "⚠️ Something went wrong. Please try again.";
+      
+      if (error?.response?.status === 429) {
+        errorMessage = "🚀 AI is a bit busy right now (High Traffic). I'm trying to switch to a backup model, please try sending your message again in a moment.";
+      } else if (error?.response?.data?.message) {
+        errorMessage = `⚠️ ${error.response.data.message}`;
+      }
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "⚠️ Something went wrong. Please try again.",
+          content: errorMessage,
         },
       ]);
 
