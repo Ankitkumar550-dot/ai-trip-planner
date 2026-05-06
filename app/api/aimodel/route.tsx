@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { aj } from "../arcjet/route";
+import { aj } from "@/lib/arcjet";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
@@ -49,6 +49,7 @@ Response format (STRICT JSON ONLY):
 
 const FINAL_PROMPT = `
 You are an AI travel agent. Based on the conversation history, generate a comprehensive JSON trip plan.
+You must generate at least 3 hotel options and a detailed daily itinerary with at least 2 activities per day.
 
 Response format (STRICT JSON ONLY):
 {
@@ -57,8 +58,36 @@ Response format (STRICT JSON ONLY):
   "group_size": "Group size",
   "duration": "Trip duration",
   "origin": "Starting location",
-  "hotels": [],
-  "itinerary": []
+  "hotels": [
+    {
+      "hotel_name": "string",
+      "hotel_address": "string",
+      "price_per_night": "string",
+      "hotel_image_url": "string",
+      "geo_coordinates": { "latitude": 0, "longitude": 0 },
+      "rating": 5,
+      "description": "string"
+    }
+  ],
+  "itinerary": [
+    {
+      "day": 1,
+      "day_plan": "string",
+      "best_time_to_visit_day": "string",
+      "activities": [
+        {
+          "place_name": "string",
+          "place_details": "string",
+          "place_image_url": "string",
+          "geo_coordinates": { "latitude": 0, "longitude": 0 },
+          "place_address": "string",
+          "ticket_pricing": "string",
+          "time_travel_each_location": "string",
+          "best_time_to_visit": "string"
+        }
+      ]
+    }
+  ]
 }
 `;
 
@@ -67,7 +96,14 @@ export async function POST(req: NextRequest) {
     const user = await currentUser();
     const body = await req.json();
     const { has } = await auth();
-    const hasPremiumAccess = has({ plan: 'Monthly' })
+    // Clerk's has() expects a permission or role key, not a custom plan key.
+    // We wrap it in try-catch to prevent any further Clerk API errors.
+    let hasPremiumAccess = false;
+    try {
+      hasPremiumAccess = has({ permission: 'plan:Monthly' });
+    } catch (e) {
+      console.warn("Clerk permission check failed:", e);
+    }
     console.log("hasPremiumAccess", hasPremiumAccess);
     const { messages, isFinal } = body;
 
@@ -95,7 +131,7 @@ export async function POST(req: NextRequest) {
     // ✅ Call AI
     const completion = await openai.chat.completions.create({
       model: "google/gemini-2.5-flash",
-      max_tokens: 8000,
+      max_tokens: 6000,
       response_format: { type: "json_object" },
       messages: [
         {
