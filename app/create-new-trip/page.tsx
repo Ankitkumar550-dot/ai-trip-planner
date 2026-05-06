@@ -43,33 +43,7 @@ export default function CreateNewTrip() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <Itinerary />
-
-          <div className="relative bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-5 border border-white/30 hover:scale-[1.02] transition duration-300">
-            <h2 className="font-semibold text-lg mb-3">
-              📍 Your Trip Plan
-            </h2>
-
-            <div className="text-gray-600 max-h-[300px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
-              {tripPlan ? (
-                <div className="p-4 bg-white rounded-xl shadow-inner border border-gray-100">
-                  {tripPlan}
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 1: Arrival & Local Sightseeing
-                  </li>
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 2: Adventure Activities
-                  </li>
-                  <li className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition">
-                    Day 3: Explore Culture & Food
-                  </li>
-                </ul>
-              )}
-            </div>
-          </div>
+          <Itinerary tripPlan={tripPlan} />
         </div>
 
       </div>

@@ -5,6 +5,8 @@ import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { Loader } from "lucide-react";
+import HotelCardItem from "@/app/create-new-trip/_components/HotelCardItem";
+import PlaceCardItem from "@/app/create-new-trip/_components/PlaceCardItem";
 
 export default function TripDetailsPage() {
   const params = useParams();
@@ -89,25 +91,36 @@ export default function TripDetailsPage() {
                   </div>
 
                   {/* Hotels Section */}
-                  {plan.hotels && plan.hotels.length > 0 && (
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        🏨 Recommended Hotels
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {plan.hotels.map((hotel: any, idx: number) => (
-                          <div key={idx} className="border rounded-2xl p-4 hover:shadow-md transition">
-                            <h4 className="font-bold text-lg text-gray-800">{hotel.hotel_name || hotel.name}</h4>
-                            <div className="flex items-center gap-3 text-sm mt-2 mb-3">
-                              <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md font-medium">⭐ {hotel.rating}</span>
-                              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium">💸 {hotel.price_per_night || hotel.price}</span>
-                            </div>
-                            <p className="text-gray-600 text-sm leading-relaxed">{hotel.description}</p>
+                  {(() => {
+                      let rawHotels = plan?.hotels || plan?.hotel_options || plan?.hotel_recommendations || plan?.hotelRecommendations;
+                      let hotelsArray: any[] = [];
+                      if (Array.isArray(rawHotels)) {
+                          hotelsArray = rawHotels;
+                      } else if (typeof rawHotels === 'object' && rawHotels !== null) {
+                          if (rawHotels.hotels && Array.isArray(rawHotels.hotels)) {
+                              hotelsArray = rawHotels.hotels;
+                          } else {
+                              hotelsArray = Object.values(rawHotels);
+                          }
+                      } else if (rawHotels) {
+                          hotelsArray = [rawHotels];
+                      }
+
+                      if (!hotelsArray || hotelsArray.length === 0) return null;
+
+                      return (
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            🏨 Recommended Hotels
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {hotelsArray.map((hotel: any, idx: number) => (
+                              <HotelCardItem key={idx} hotel={hotel} />
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        </div>
+                      );
+                  })()}
 
                   {/* Itinerary Section */}
                   {plan.itinerary && plan.itinerary.length > 0 && (
@@ -123,7 +136,14 @@ export default function TripDetailsPage() {
                             </div>
                             <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-md transition">
                               <h4 className="font-bold text-lg text-indigo-600 mb-2">Day {dayPlan.day}</h4>
-                              <p className="text-gray-600 leading-relaxed text-sm">{dayPlan.day_plan}</p>
+                              <p className="text-gray-600 leading-relaxed text-sm mb-4">{dayPlan.day_plan}</p>
+                              {dayPlan.activities && Array.isArray(dayPlan.activities) && (
+                                <div className="grid grid-cols-1 gap-4">
+                                  {dayPlan.activities.map((activity: any, actIdx: number) => (
+                                    <PlaceCardItem key={actIdx} activity={activity} />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

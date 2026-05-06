@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Ticket, Clock } from 'lucide-react';
+import { Ticket, Clock, MapPin } from 'lucide-react';
 
 export default function PlaceCardItem({ activity }: { activity: any }) {
     return (
@@ -19,12 +19,18 @@ export default function PlaceCardItem({ activity }: { activity: any }) {
                     <div className="space-y-2">
                         <div className="flex items-start gap-2 text-sm">
                             <Ticket className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                            <span className="text-gray-600 font-medium leading-tight">{activity?.ticket_pricing}</span>
+                            <span className="text-gray-600 font-medium leading-tight">{activity?.ticket_pricing || activity?.ticket_price || activity?.price || "Free"}</span>
                         </div>
                         <div className="flex items-start gap-2 text-sm">
                             <Clock className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
-                            <span className="text-gray-600 font-medium leading-tight">{activity?.best_time_to_visit || activity?.time_travel_each_location}</span>
+                            <span className="text-gray-600 font-medium leading-tight">{activity?.time_travel_each_location || activity?.time_to_travel || activity?.duration || activity?.best_time_to_visit || "N/A"}</span>
                         </div>
+                        {activity?.place_address && (
+                            <div className="flex items-start gap-2 text-sm">
+                                <MapPin className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                <span className="text-gray-600 font-medium leading-tight line-clamp-1">{activity.place_address}</span>
+                            </div>
+                        )}
                     </div>
                     <Button variant={'outline'} className='w-full'>View Location</Button>
                 </div>
