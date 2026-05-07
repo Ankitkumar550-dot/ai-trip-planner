@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const OpenAI = require('openai');
-const arcjet = require("@arcjet/node").default;
-const { tokenBucket } = require("@arcjet/node");
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -13,18 +11,6 @@ const openai = new OpenAI({
   },
 });
 
-const aj = arcjet({
-  key: process.env.ARCJET_KEY,
-  rules: [
-    tokenBucket({
-      mode: "LIVE",
-      characteristics: ["userId"],
-      refillRate: 5,
-      interval: 86400,
-      capacity: 25,
-    }),
-  ],
-});
 
 const PROMPT = `
 You are an AI Trip Planner Agent. Your goal is to help users plan a trip step by step.

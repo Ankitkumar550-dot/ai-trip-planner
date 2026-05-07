@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
     await newTrip.save();
     res.status(201).json(newTrip);
   } catch (error) {
+    console.error("❌ Error saving trip:", error);
     res.status(500).json({ message: error.message });
   }
 });

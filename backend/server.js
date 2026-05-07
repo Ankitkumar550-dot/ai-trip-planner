@@ -16,9 +16,16 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 10000,
+  family: 4 // Force IPv4 to avoid Node 22+ DNS resolution issues
+})
   .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+  .catch((err) => {
+    console.error('❌ MongoDB Connection Error:', err);
+    // Log more details if available
+    if (err.reason) console.error('Reason:', err.reason);
+  });
 
 // Routes
 app.use('/api/ai', aiRoutes);

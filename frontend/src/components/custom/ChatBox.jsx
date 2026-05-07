@@ -78,9 +78,15 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
           onTripPlanGenerate?.(planJsonText);
 
           const docId = uuidv4();
+          const userEmail = user?.primaryEmailAddress?.emailAddress;
+          
+          if (!userEmail) {
+            throw new Error("You must be signed in to save your trip.");
+          }
+
           await axios.post(`${import.meta.env.VITE_BACKEND_URL}/trips`, {
             tripId: docId,
-            userEmail: user?.primaryEmailAddress?.emailAddress || "",
+            userEmail: userEmail,
             tripPlan: planJsonText,
             destination: externalInput || "",
           });
@@ -97,7 +103,7 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
             ...prev,
             {
               role: "assistant",
-              content: `Error saving trip: ${e.message || String(e)}`,
+              content: `Error: ${e.response?.data?.message || e.message || String(e)}`,
             },
           ]);
         }
