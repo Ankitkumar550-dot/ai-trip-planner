@@ -20,29 +20,38 @@ app.use(express.json());
 mongoose.set('bufferCommands', true); // Re-enable buffering but with a timeout
 
 // MongoDB Connection
-console.log('⏳ Connecting to MongoDB...');
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 15000,
-  family: 4
-})
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    // Start server ONLY after DB is connected
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+const connectDB = async () => {
+  try {
+    console.log('⏳ Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 15000,
+      family: 4
     });
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB Connection Error:', err);
+    console.log('✅ Connected to MongoDB');
+    
+    // Start server ONLY after DB is connected (if not already listening)
+    if (!app.listening) {
+      app.listen(PORT, () => {
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      });
+    }
+  } catch (err) {
+    console.error('❌ MongoDB Connection Error:', err.message);
     console.error('👉 Ensure your Atlas IP Whitelist is set (0.0.0.0/0 for testing)');
-  });
+    // Try to reconnect after 5 seconds
+    setTimeout(connectDB, 5000);
+  }
+};
+
+connectDB();
 
 mongoose.connection.on('error', err => {
   console.error('❌ MongoDB Runtime Error:', err);
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ MongoDB Disconnected');
+  console.warn('⚠️ MongoDB Disconnected. Attempting to reconnect...');
+  connectDB();
 });
 
 // Routes

@@ -89,7 +89,7 @@ export default function Itinerary({ tripPlan }) {
                                     {tripData.route_plan.steps.map((step, idx) => (
                                         <div key={idx} className="flex gap-4 group">
                                             <div className="flex flex-col items-center">
-                                                <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-blue-200 group-hover:border-indigo-400 transition">
+                                                <div className="w-10 h-10 rounded-full bg-neutral-800 shadow-md flex items-center justify-center border-2 border-white/10 group-hover:border-indigo-400 transition">
                                                     {step.type.toLowerCase().includes('flight') || step.type.toLowerCase().includes('plane') ? '✈️' :
                                                         step.type.toLowerCase().includes('train') ? '🚆' :
                                                             step.type.toLowerCase().includes('taxi') || step.type.toLowerCase().includes('car') ? '🚖' : '🚶'}
@@ -99,21 +99,21 @@ export default function Itinerary({ tripPlan }) {
                                                 )}
                                             </div>
                                             <div className="pb-6">
-                                                <h4 className="font-bold text-gray-800 flex items-center gap-2">
+                                                <h4 className="font-bold text-white flex items-center gap-2">
                                                     {step.description}
-                                                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-full border border-blue-200 text-blue-600 uppercase font-bold">
+                                                    <span className="text-[10px] bg-neutral-800 px-2 py-0.5 rounded-full border border-white/10 text-indigo-400 uppercase font-bold">
                                                         {step.type}
                                                     </span>
                                                 </h4>
                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                                                    <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                                                    <p className="text-xs text-gray-300 font-medium flex items-center gap-1">
                                                         <Clock size={12} /> {step.duration}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                                                    <p className="text-xs text-gray-300 font-medium flex items-center gap-1">
                                                         <Wallet size={12} /> {step.price_estimate}
                                                     </p>
                                                     {step.distance && (
-                                                        <p className="text-xs text-gray-500 font-medium">📍 {step.distance}</p>
+                                                        <p className="text-xs text-gray-300 font-medium">📍 {step.distance}</p>
                                                     )}
                                                 </div>
                                                 {step.additional_info && (
