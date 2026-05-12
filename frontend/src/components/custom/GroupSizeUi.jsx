@@ -37,13 +37,13 @@ function GroupSizeUi({ onSelectedOption }) {
       {SelectTravelesList.map((item) => (
         <div
           key={item.id}
-          className='p-3 border rounded-xl bg-white hover:border-gray-400 hover:shadow-sm cursor-pointer transition-all flex items-center gap-3'
+          className='p-3 border border-white/10 rounded-xl bg-neutral-900 hover:border-blue-500/50 hover:shadow-indigo-500/10 cursor-pointer transition-all flex items-center gap-3 text-left'
           onClick={() => onSelectedOption(item.title + ":" + item.people)}
         >
           <span className="text-2xl">{item.Icon}</span>
           <div>
-            <h2 className="font-medium">{item.title}</h2>
-            <p className="text-sm text-gray-500">{item.desc}</p>
+            <h2 className="font-bold text-white">{item.title}</h2>
+            <p className="text-sm text-gray-400">{item.desc}</p>
           </div>
         </div>
       ))}

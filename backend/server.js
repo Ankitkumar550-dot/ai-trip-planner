@@ -7,6 +7,7 @@ const { clerkMiddleware } = require('@clerk/clerk-sdk-node');
 const aiRoutes = require('./routes/ai');
 const userRoutes = require('./routes/user');
 const tripRoutes = require('./routes/trip');
+const emailRoutes = require('./routes/email');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,31 +16,43 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Mongoose Configuration
+mongoose.set('bufferCommands', true); // Re-enable buffering but with a timeout
+
 // MongoDB Connection
+console.log('⏳ Connecting to MongoDB...');
 mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 10000,
-  family: 4 // Force IPv4 to avoid Node 22+ DNS resolution issues
+  serverSelectionTimeoutMS: 15000,
+  family: 4
 })
-  .then(() => console.log('✅ Connected to MongoDB'))
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
+    // Start server ONLY after DB is connected
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    });
+  })
   .catch((err) => {
     console.error('❌ MongoDB Connection Error:', err);
-    // Log more details if available
-    if (err.reason) console.error('Reason:', err.reason);
+    console.error('👉 Ensure your Atlas IP Whitelist is set (0.0.0.0/0 for testing)');
   });
+
+mongoose.connection.on('error', err => {
+  console.error('❌ MongoDB Runtime Error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB Disconnected');
+});
 
 // Routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/email', emailRoutes);
 
 app.get('/', (req, res) => {
   res.send('AI Trip Planner API is running...');
 });
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  });
-}
 
 module.exports = app;

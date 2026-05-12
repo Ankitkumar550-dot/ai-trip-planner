@@ -19,7 +19,7 @@ function Header() {
   const { tripDetailInfo } = useContext(TripDetailContext) || {};
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-lg bg-white/70 dark:bg-neutral-900/70 border-b border-white/20 shadow-md">
+    <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-lg bg-black/80 border-b border-white/10 shadow-lg">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-8 py-4">
 
         <Link to="/" className="flex gap-2 items-center group">
@@ -34,7 +34,7 @@ function Header() {
             <Link
               key={index}
               to={menu.path}
-              className="relative text-gray-800 dark:text-gray-200 font-medium group"
+              className="relative text-white font-medium group"
             >
               {menu.name}
               <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-300 group-hover:w-full"></span>

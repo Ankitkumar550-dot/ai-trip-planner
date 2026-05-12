@@ -23,11 +23,11 @@ export const Suggestions = [
 function EmptyBoxState({ onSuggestionSelect }) {
     return (
         <div className='mt-10 flex flex-col items-center justify-center px-4'>
-            <h2 className='font-bold text-3xl text-center'>
-                Start Planning new <span className="text-primary">Trip</span> using AI
+            <h2 className='font-bold text-3xl text-center text-white'>
+                Start Planning new <span className="text-indigo-400">Trip</span> using AI
             </h2>
-            <p className='text-center text-gray-500 mt-4 max-w-2xl text-sm md:text-base'>
-                Discover personalized travel itineraries, find the best destinations, and plan your dream vacation effortlessly with the power of AI. Let our smart assistant do the hard work while you enjoy the journey.
+            <p className='text-center text-gray-400 mt-4 max-w-2xl text-sm md:text-base'>
+                Discover personalized travel itineraries, find the best destinations, and plan your dream vacation effortlessly with the power of AI.
             </p>
 
             <div className="flex flex-col gap-4 mt-8 w-full max-w-3xl">
@@ -35,10 +35,10 @@ function EmptyBoxState({ onSuggestionSelect }) {
                     <div
                         key={index}
                         onClick={() => onSuggestionSelect && onSuggestionSelect(item.title)}
-                        className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-neutral-800 border hover:shadow-sm transition cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700"
+                        className="flex items-center gap-4 p-4 rounded-2xl bg-neutral-900 border border-white/5 hover:border-blue-500/50 transition cursor-pointer hover:bg-neutral-800"
                     >
                         {item.icon}
-                        <span className="font-medium text-gray-800 dark:text-gray-200">{item.title}</span>
+                        <span className="font-medium text-white">{item.title}</span>
                     </div>
                 ))}
             </div>

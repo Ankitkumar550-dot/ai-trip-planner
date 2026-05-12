@@ -11,7 +11,7 @@ const tripSchema = new mongoose.Schema({
     required: true
   },
   tripDetail: {
-    type: String, // Stringified JSON
+    type: String,
     required: true
   },
   destination: {

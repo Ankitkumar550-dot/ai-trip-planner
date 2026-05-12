@@ -4,9 +4,12 @@ import { PopularCityList } from "../components/PopularCityList";
 
 function Home() {
   return (
-    <div className="pt-20">
-      <Hero />
-      <PopularCityList />
+    <div className="relative min-h-screen bg-black text-white">
+      {/* Background Pattern specifically for Home Page */}
+      <div className="relative z-10 pt-20">
+        <Hero />
+        <PopularCityList />
+      </div>
     </div>
   );
 }

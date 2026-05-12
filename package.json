@@ -12,13 +12,14 @@
     "postinstall": "npm run install:all"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "mongoose": "^9.6.1",
+    "@arcjet/node": "^1.4.0",
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "@clerk/clerk-sdk-node": "^4.13.23",
-    "openai": "^6.36.0",
-    "@arcjet/node": "^1.4.0"
+    "express": "^5.2.1",
+    "mongoose": "^9.6.1",
+    "nodemailer": "^8.0.7",
+    "openai": "^6.36.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

@@ -7,12 +7,12 @@ export function PopularCityList() {
   ));
 
   return (
-    <div className="w-full py-24 bg-gradient-to-b from-white to-gray-100 dark:from-neutral-900 dark:to-neutral-950">
+    <div className="w-full py-24 bg-black">
       <div className="max-w-7xl mx-auto px-4">
-        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-800 dark:text-white">
+        <h2 className="text-3xl md:text-5xl font-extrabold text-white">
           🌍 Explore Popular Destinations
         </h2>
-        <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
+        <p className="mt-4 text-lg text-gray-400 max-w-2xl">
           Discover breathtaking cities around the world and plan your next
           unforgettable journey.
         </p>

@@ -40,10 +40,12 @@ function App() {
 
   if (!isLoaded) {
     return (
-      <div className="h-screen flex items-center justify-center font-outfit">
+      <div className="h-screen flex items-center justify-center font-outfit bg-black text-white">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 bg-indigo-600 rounded-full mb-4"></div>
-          <p className="text-gray-500 font-medium tracking-widest uppercase text-xs">Initializing...</p>
+          <div className="w-20 h-20 bg-white rounded-2xl mb-4 flex items-center justify-center shadow-2xl shadow-indigo-500/20 rotate-12">
+            <span className="text-4xl font-black text-indigo-600 -rotate-12">A</span>
+          </div>
+          <p className="text-indigo-400 font-bold tracking-[0.3em] uppercase text-sm animate-bounce">your dream</p>
         </div>
       </div>
     );
@@ -53,64 +55,64 @@ function App() {
     <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
       <TripDetailContext.Provider value={{ tripDetailInfo, setTripDetailInfo }}>
         <Router>
-          <div className="min-h-screen bg-white font-outfit">
+          <div className="min-h-screen font-outfit bg-black text-white">
             <Header />
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/contact-us" element={<ContactUs />} />
-              
-              <Route path="/create-new-trip" element={
-                <>
-                  <SignedIn>
-                    <CreateNewTrip />
-                  </SignedIn>
-                  <SignedOut>
-                    <RedirectToSignIn />
-                  </SignedOut>
-                </>
-              } />
+                <Route path="/" element={<Home />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/contact-us" element={<ContactUs />} />
+                
+                <Route path="/create-new-trip" element={
+                  <>
+                    <SignedIn>
+                      <CreateNewTrip />
+                    </SignedIn>
+                    <SignedOut>
+                      <RedirectToSignIn />
+                    </SignedOut>
+                  </>
+                } />
 
-              <Route path="/trip-details/:tripId" element={
-                <>
-                  <SignedIn>
-                    <TripDetails />
-                  </SignedIn>
-                  <SignedOut>
-                    <RedirectToSignIn />
-                  </SignedOut>
-                </>
-              } />
+                <Route path="/trip-details/:tripId" element={
+                  <>
+                    <SignedIn>
+                      <TripDetails />
+                    </SignedIn>
+                    <SignedOut>
+                      <RedirectToSignIn />
+                    </SignedOut>
+                  </>
+                } />
 
-              <Route path="/my-trips" element={
-                <>
-                  <SignedIn>
-                    <MyTrips />
-                  </SignedIn>
-                  <SignedOut>
-                    <RedirectToSignIn />
-                  </SignedOut>
-                </>
-              } />
+                <Route path="/my-trips" element={
+                  <>
+                    <SignedIn>
+                      <MyTrips />
+                    </SignedIn>
+                    <SignedOut>
+                      <RedirectToSignIn />
+                    </SignedOut>
+                  </>
+                } />
 
-              <Route path="/book-now" element={
-                <>
-                  <SignedIn>
-                    <BookNow />
-                  </SignedIn>
-                  <SignedOut>
-                    <RedirectToSignIn />
-                  </SignedOut>
-                </>
-              } />
+                <Route path="/book-now" element={
+                  <>
+                    <SignedIn>
+                      <BookNow />
+                    </SignedIn>
+                    <SignedOut>
+                      <RedirectToSignIn />
+                    </SignedOut>
+                  </>
+                } />
 
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </div>
-        </Router>
-      </TripDetailContext.Provider>
-    </UserDetailContext.Provider>
-  );
-}
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </div>
+          </Router>
+        </TripDetailContext.Provider>
+      </UserDetailContext.Provider>
+    );
+  }
 
 export default App;

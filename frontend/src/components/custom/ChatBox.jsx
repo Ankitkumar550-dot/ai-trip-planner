@@ -99,11 +99,18 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
           }
         } catch (e) {
           console.error("Failed to generate or save final trip plan", e);
+          let rawError = e.response?.data?.message || e.message || String(e);
+          let userFriendlyError = rawError;
+          
+          if (rawError.includes("buffering timed out") || rawError.includes("SSL") || rawError.includes("handshake") || rawError.includes("MongooseServerSelectionError")) {
+            userFriendlyError = "🚫 Database Connection Error. Please check if your IP is whitelisted in MongoDB Atlas or try again in a moment.";
+          }
+
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              content: `Error: ${e.response?.data?.message || e.message || String(e)}`,
+              content: `⚠️ ${userFriendlyError}`,
             },
           ]);
         }
@@ -186,7 +193,7 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
   }
 
   return (
-    <div className="h-[85vh] flex flex-col bg-secondary border rounded-2xl p-5">
+    <div className="h-[85vh] flex flex-col bg-black backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl">
       <section className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <EmptyBoxState onSuggestionSelect={(suggestion) => {
@@ -200,9 +207,9 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-lg px-4 py-2 rounded-lg ${msg.role === "user"
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-black"
+                className={`max-w-lg px-4 py-2 rounded-2xl shadow-sm text-left ${msg.role === "user"
+                  ? "bg-blue-600 text-white border border-blue-500"
+                  : "bg-neutral-900 text-white border border-white/5"
                   }`}
               >
                 {msg.content}
@@ -216,10 +223,10 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
 
       <section>
         <div className="relative flex justify-center">
-          <div className="w-full md:w-3/4 backdrop-blur-xl bg-white/70 dark:bg-neutral-800/60 border border-white/30 shadow-2xl rounded-3xl p-4">
+          <div className="w-full md:w-3/4 backdrop-blur-xl bg-black border border-white/10 shadow-2xl rounded-3xl p-4">
             <Textarea
               placeholder="Start Typing Here...."
-              className="w-full h-24 bg-transparent focus:outline-none resize-none"
+              className="w-full h-24 bg-transparent focus:outline-none resize-none text-white placeholder:text-gray-500"
               onChange={(e) => setUserInput(e.target.value)}
               value={userInput}
             />
@@ -227,7 +234,7 @@ function ChatBox({ externalInput, onTripPlanGenerate }) {
             <div className="flex justify-end">
               <Button
                 size="icon"
-                className="mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-full hover:scale-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full hover:scale-110 transition disabled:opacity-50 disabled:cursor-not-allowed border border-blue-500"
                 onClick={() => onSend()}
                 disabled={loading}
               >

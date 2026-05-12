@@ -31,11 +31,11 @@ function Hero() {
   }
 
   return (
-    <section className="relative min-h-screen pt-28 flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 px-4 overflow-hidden">
+    <section className="relative min-h-screen pt-28 flex items-center justify-center bg-transparent px-4 overflow-hidden">
 
       {/* Background Blur */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-purple-400/30 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-400/30 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute top-10 left-10 w-72 h-72 bg-neutral-800/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-10 right-10 w-72 h-72 bg-neutral-800/20 rounded-full blur-3xl" />
 
       <div className="relative max-w-4xl w-full text-center space-y-8 z-10">
 
@@ -46,14 +46,14 @@ function Hero() {
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
           Tell me your dream destination and I’ll instantly create your
           personalized trip.
         </p>
 
         {/* Input */}
         <div className="relative flex justify-center">
-          <div className="w-full md:w-3/4 backdrop-blur-xl bg-white/70 dark:bg-neutral-800/60 border border-white/30 shadow-2xl rounded-3xl p-4">
+          <div className="w-full md:w-3/4 backdrop-blur-xl bg-black border border-white/10 shadow-2xl rounded-3xl p-4">
             <Textarea
               placeholder="Create a 5-day trip to Paris from India..."
               className="w-full h-24 bg-transparent focus:outline-none resize-none"
@@ -74,7 +74,7 @@ function Hero() {
             <div
               key={index}
               onClick={() => onSend(item)}
-              className="flex items-center gap-2 px-5 py-3 rounded-full bg-white/70 dark:bg-neutral-800/70 backdrop-blur-md border hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition cursor-pointer"
+              className="flex items-center gap-2 px-5 py-3 rounded-full bg-neutral-900/70 backdrop-blur-md border border-white/10 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white transition cursor-pointer"
             >
               <Globe2 className="h-5 w-5" />
               <span>{item}</span>

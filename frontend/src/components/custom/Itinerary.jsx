@@ -44,14 +44,14 @@ export default function Itinerary({ tripPlan }) {
     return (
         <div id="itinerary-section" className="relative w-full h-[85vh] overflow-y-auto scrollbar-hide pb-10">
             {tripData && Object.keys(tripData).length > 0 ? (
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-8 border border-white/50">
-                    <div className="flex items-center gap-3 mb-6 border-b pb-4">
-                        <div className="bg-indigo-100 p-2 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-neutral-950/90 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-8 border border-white/10 text-left">
+                    <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                        <div className="bg-indigo-500/10 p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                         </div>
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                        <h2 className="text-xl md:text-2xl font-bold text-white">
                             Your Comprehensive Itinerary
                         </h2>
                     </div>
@@ -59,31 +59,31 @@ export default function Itinerary({ tripPlan }) {
                     <div className="space-y-8">
                         {/* Overview Grid */}
                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-                            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                                <p className="text-xs text-indigo-500 font-bold uppercase tracking-wider mb-1">Origin</p>
-                                <p className="font-semibold text-gray-800 text-sm md:text-base">{tripData.origin || "N/A"}</p>
+                            <div className="bg-neutral-800 p-4 rounded-2xl border border-white/5">
+                                <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Origin</p>
+                                <p className="font-semibold text-white text-sm md:text-base">{tripData.origin || "N/A"}</p>
                             </div>
-                            <div className="bg-pink-50 p-4 rounded-2xl border border-pink-100">
-                                <p className="text-xs text-pink-500 font-bold uppercase tracking-wider mb-1">Duration</p>
-                                <p className="font-semibold text-gray-800 text-sm md:text-base">{tripData.duration || "N/A"}</p>
+                            <div className="bg-neutral-800 p-4 rounded-2xl border border-white/5">
+                                <p className="text-xs text-pink-400 font-bold uppercase tracking-wider mb-1">Duration</p>
+                                <p className="font-semibold text-white text-sm md:text-base">{tripData.duration || "N/A"}</p>
                             </div>
-                            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                                <p className="text-xs text-orange-500 font-bold uppercase tracking-wider mb-1">Budget</p>
-                                <p className="font-semibold text-gray-800 text-sm md:text-base">{tripData.budget || "N/A"}</p>
+                            <div className="bg-neutral-800 p-4 rounded-2xl border border-white/5">
+                                <p className="text-xs text-orange-400 font-bold uppercase tracking-wider mb-1">Budget</p>
+                                <p className="font-semibold text-white text-sm md:text-base">{tripData.budget || "N/A"}</p>
                             </div>
-                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
-                                <p className="text-xs text-green-500 font-bold uppercase tracking-wider mb-1">Group Size</p>
-                                <p className="font-semibold text-gray-800 text-sm md:text-base">{tripData.group_size || "N/A"}</p>
+                            <div className="bg-neutral-800 p-4 rounded-2xl border border-white/5">
+                                <p className="text-xs text-green-400 font-bold uppercase tracking-wider mb-1">Group Size</p>
+                                <p className="font-semibold text-white text-sm md:text-base">{tripData.group_size || "N/A"}</p>
                             </div>
                         </div>
 
                         {/* Route Plan / Logistics Section */}
                         {tripData.route_plan && (
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100 shadow-sm">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div className="bg-neutral-900 p-6 rounded-3xl border border-white/5 shadow-sm">
+                                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                     🚀 Best Route & Logistics
                                 </h3>
-                                <p className="text-sm text-gray-600 mb-6 italic">"{tripData.route_plan.summary}"</p>
+                                <p className="text-sm text-gray-400 mb-6 italic">"{tripData.route_plan.summary}"</p>
 
                                 <div className="space-y-4">
                                     {tripData.route_plan.steps.map((step, idx) => (
@@ -129,7 +129,7 @@ export default function Itinerary({ tripPlan }) {
                         {/* Hotels Section */}
                         {hotelsArray && hotelsArray.length > 0 && (
                             <div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                     🏨 Recommended Hotels
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -143,21 +143,21 @@ export default function Itinerary({ tripPlan }) {
                         {/* Itinerary Section */}
                         {itineraryArray && itineraryArray.length > 0 && (
                             <div>
-                                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                                     🗺️ Daily Itinerary
                                 </h3>
-                                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-300 before:to-transparent">
+                                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
                                     {itineraryArray.map((dayPlan, idx) => (
                                         <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-500 text-white font-bold shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-neutral-900 bg-indigo-600 text-white font-bold shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                                                 {dayPlan.day || idx + 1}
                                             </div>
-                                            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-md transition">
-                                                <h4 className="font-bold text-lg text-indigo-600 mb-2">Day {dayPlan.day || idx + 1}</h4>
+                                            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-neutral-900 p-5 rounded-2xl shadow-sm border border-white/5 group-hover:shadow-indigo-500/10 transition">
+                                                <h4 className="font-bold text-lg text-indigo-400 mb-2">Day {dayPlan.day || idx + 1}</h4>
                                                 {dayPlan.best_time_to_visit_day && (
-                                                    <p className="font-semibold text-sm text-gray-800 mb-1">Best Time: {dayPlan.best_time_to_visit_day}</p>
+                                                    <p className="font-semibold text-sm text-white mb-1">Best Time: {dayPlan.best_time_to_visit_day}</p>
                                                 )}
-                                                <p className="text-gray-600 leading-relaxed text-sm mb-4">{dayPlan.day_plan}</p>
+                                                <p className="text-gray-400 leading-relaxed text-sm mb-4">{dayPlan.day_plan}</p>
                                                 {dayPlan.activities && Array.isArray(dayPlan.activities) && (
                                                     <div className="grid grid-cols-1 gap-4">
                                                         {dayPlan.activities.map((activity, actIdx) => (

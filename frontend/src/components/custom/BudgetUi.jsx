@@ -27,12 +27,12 @@ function BudgetUi({onSelectedOption}) {
       {SelectBudgetOption.map((item, index) => (
         <div
           key={index}
-          className='p-4 border rounded-2xl bg-white hover:border-gray-400 hover:shadow-sm cursor-pointer transition-all flex flex-col'
+          className='p-4 border border-white/10 rounded-2xl bg-neutral-900 hover:border-blue-500/50 hover:shadow-indigo-500/10 cursor-pointer transition-all flex flex-col text-left'
           onClick={() => onSelectedOption(item.title + ":" + item.desc)}
         >
           <div className='text-4xl mb-3'>{item.icon}</div>
-          <h2 className='text-base font-bold text-gray-900'>{item.title}</h2>
-          <p className='text-sm text-gray-500 mt-1 leading-snug'>{item.desc}</p>
+          <h2 className='text-base font-bold text-white'>{item.title}</h2>
+          <p className='text-sm text-gray-400 mt-1 leading-snug'>{item.desc}</p>
         </div>
       ))}
     </div>
